@@ -6,6 +6,7 @@
 #define MAX_PIPE_FDS 4
 #define NR_SOCKET_FDS 375
 #define NR_FILE_FDS 250
+#define NR_FANOTIFY_FDS 10
 
 #define REGENERATION_POINT 100000
 

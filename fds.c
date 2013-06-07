@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/fanotify.h>
 
 #include "shm.h"
 #include "files.h"
@@ -31,6 +32,17 @@ static void open_pipes(void)
 	}
 }
 
+static void open_fanotify_fds(void)
+{
+	unsigned int i;
+
+	for (i = 0; i < NR_FANOTIFY_FDS; ++i) {
+		shm->fanotify_fds[i] = fanotify_init(0, 0);
+		if (shm->fanotify_fds[i] >= 0)
+			output(2, "fd[%d] = fanotify\n", shm->fanotify_fds[i]);
+	}
+}
+
 static int get_new_random_fd(void)
 {
 	unsigned int i;
@@ -39,7 +51,7 @@ static int get_new_random_fd(void)
 	int fd = 0;
 	int ret;
 
-	i = rand() % 3;
+	i = rand() % 4;
 
 	if (do_specific_proto == TRUE)
 		i = 1;
@@ -112,6 +124,9 @@ retry_file:
 do_pipe:
 		fd = shm->pipe_fds[rand() % MAX_PIPE_FDS];
 		break;
+	case 3:
+		fd = shm->fanotify_fds[rand() % NR_FANOTIFY_FDS];
+		break;
 	default:
 		break;
 	}
@@ -148,6 +163,7 @@ void setup_fds(void)
 		return;
 
 	open_pipes();
+	open_fanotify_fds();
 
 	generate_filelist();
 	if (files_in_index == 0)
